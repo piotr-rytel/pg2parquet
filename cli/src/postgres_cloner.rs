@@ -206,7 +206,13 @@ fn pg_connect(args: &PostgresConnArgs) -> Result<Client, String> {
 
 	let connector = build_tls_connector(&args.ssl_root_cert)?;
 
-	let client = pg_config.connect(connector).map_err(|e| format!("DB connection failed: {}", e.to_string()))?;
+	let mut client = pg_config.connect(connector).map_err(|e| format!("DB connection failed: {}", e.to_string()))?;
+
+	// Set statement timeout to 5 minutes
+	client.execute("set statement_timeout to 300000", &[])
+		.map_err(|e| format!("Failed to set statement timeout: {}", e.to_string()))?;
+	client.execute("commit", &[])
+		.map_err(|e| format!("Failed to commit statement timeout: {}", e.to_string()))?;
 
 	Ok(client)
 }
