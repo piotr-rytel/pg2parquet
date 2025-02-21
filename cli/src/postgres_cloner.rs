@@ -344,7 +344,7 @@ fn map_schema_root<'a>(row: &[Column], s: &SchemaSettings) -> Result<ResolvedCol
 
 	let merged_appender: DynColumnAppender<Arc<Row>> = Box::new(DynamicMergedAppender::new(column_appenders, 0, 0));
 	let struct_type = ParquetType::group_type_builder("root")
-		.with_fields(&mut parquet_types.into_iter().map(Arc::new).collect())
+		.with_fields(parquet_types.into_iter().map(Arc::new).collect())
 		.build()
 		.unwrap();
 
@@ -406,7 +406,7 @@ fn map_schema_column<TRow: PgAbstractRow + Clone + 'static>(
 					),
 					ParquetType::group_type_builder(c.col_name())
 						.with_repetition(Repetition::OPTIONAL)
-						.with_fields(&mut vec![ Arc::new(schema), Arc::new(dim_schema) ])
+						.with_fields(vec![ Arc::new(schema), Arc::new(dim_schema) ])
 						.build().unwrap()
 				)),
 				SchemaSettingsArrayHandling::DimensionsAndLowerBound => Ok((
@@ -415,7 +415,7 @@ fn map_schema_column<TRow: PgAbstractRow + Clone + 'static>(
 					),
 					ParquetType::group_type_builder(c.col_name())
 						.with_repetition(Repetition::OPTIONAL)
-						.with_fields(&mut vec![ Arc::new(schema), Arc::new(dim_schema), Arc::new(lb_schema) ])
+						.with_fields(vec![ Arc::new(schema), Arc::new(dim_schema), Arc::new(lb_schema) ])
 						.build().unwrap()
 				))
 			}
@@ -428,7 +428,7 @@ fn map_schema_column<TRow: PgAbstractRow + Clone + 'static>(
 			let col_upper = map_schema_column::<UnclonableHack<PgRawRange>>(element_type, &c.nest("upper", 1), settings)?;
 
 			let schema = ParquetType::group_type_builder(c.col_name())
-				.with_fields(&mut vec![
+				.with_fields(vec![
 					Arc::new(col_lower.1),
 					Arc::new(col_upper.1),
 					Arc::new(ParquetType::primitive_type_builder("lower_inclusive", basic::Type::BOOLEAN).build().unwrap()),
@@ -472,7 +472,7 @@ fn map_schema_column<TRow: PgAbstractRow + Clone + 'static>(
 			}
 
 			let schema = ParquetType::group_type_builder(c.col_name())
-				.with_fields(&mut parquet_types.into_iter().map(Arc::new).collect())
+				.with_fields(parquet_types.into_iter().map(Arc::new).collect())
 				.with_repetition(Repetition::OPTIONAL)
 				.build()
 				.unwrap();
@@ -489,10 +489,10 @@ fn make_list_schema(name: &str, repetition: Repetition, element_schema: ParquetT
 	ParquetType::group_type_builder(name)
 		.with_logical_type(Some(LogicalType::List))
 		.with_repetition(repetition)
-		.with_fields(&mut vec![
+		.with_fields(vec![
 			Arc::new(ParquetType::group_type_builder("list")
 				.with_repetition(Repetition::REPEATED)
-				.with_fields(&mut vec![
+				.with_fields(vec![
 					Arc::new(element_schema)
 				])
 				.build().unwrap())
@@ -563,7 +563,7 @@ fn map_simple_type<TRow: PgAbstractRow + Clone + 'static>(
 				SchemaSettingsIntervalHandling::Struct => {
 					let t = GroupTypeBuilder::new(c.col_name())
 						.with_repetition(Repetition::OPTIONAL)
-						.with_fields(&mut vec![
+						.with_fields(vec![
 							Arc::new(ParquetType::primitive_type_builder("months", basic::Type::INT32).build().unwrap()),
 							Arc::new(ParquetType::primitive_type_builder("days", basic::Type::INT32).build().unwrap()),
 							Arc::new(ParquetType::primitive_type_builder("microseconds", basic::Type::INT64).build().unwrap()),
